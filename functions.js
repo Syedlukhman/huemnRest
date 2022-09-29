@@ -49,13 +49,14 @@ function insertBooks(data){
     books.forEach(async(book)=>{
         console.log("books",book.subjectName)
         const subjectName=await db.SubjectModel.find({subjectName:book.subjectName},{subjectName:1,_id:0})
-        console.log(subjectName)
+        // console.log(subjectName)
        const addNewBranchId=await db.BookModel.updateOne({subjectName:subjectName[0].subjectName},
         {$push:{
             branch:{
                 branchId:branchId
             }
         }})
+        console.log(addNewBranchId)
   
  
     })

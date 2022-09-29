@@ -3,8 +3,7 @@ const app=express()
 app.use(express.json())
 const { v4: v4 } = require('uuid');
 const {insertStudents,insertStaff,insertSubjects,insertBooks} =require("./functions")
-console.log(v4())
-
+// console.log(v4())
 const db=require("./conn")
 
 app.get("/getAllBranches", async(req,res)=>{
@@ -29,7 +28,13 @@ app.get("/getAllBranchesDetails", async(req,res)=>{
         
     }
 })
+async function getBookIdFromDb(data){
+    // console.log("bookNAme",data.bookName)
+    
 
+    return getBookId
+
+}
 app.post("/insertNewBranch",async(req,res)=>{
     try{
  
@@ -41,9 +46,7 @@ app.post("/insertNewBranch",async(req,res)=>{
             ele.studentId=v4()
         })
       
-        req.body.books.forEach((ele)=>{
-            ele.bookId=v4()
-        })
+      
         req.body.subjects.forEach((ele)=>{
             ele.subjectId=v4()
         })
@@ -129,24 +132,94 @@ app.delete("/deleteStudentDetails/:studentId",async(req,res)=>{
     console.log(updateStudent)
     
 })
-//continue from here
 app.put("/updateBookDetails/:bookId",async(req,res)=>{
-    const updateStudent=await db.StudentModel.updateOne({studentId:req.params.studentId},{
-        studentName:req.body.studentName
+    const getBookName=await db.BookModel.find({bookId:req.params.bookId},{bookName:1,branch:1,_id:0})
+    const branches=JSON.parse(JSON.stringify(getBookName[0]))
+    const {branchId}=branches.branch[0]
+    
+
+    const updateBook=await db.BookModel.updateOne({bookId:req.params.bookId},{
+        bookName:req.body.bookName
     })
-    console.log(updateStudent)
+    console.log(updateBook)
+
+    const updateBookInBranch=await db.BranchModel.updateOne({branchId:branchId},{$set:{"books.$[b].bookName":req.body.bookName}},{arrayFilters:[{"b.bookName":req.body.oldName}]})
+    console.log(updateBookInBranch)
+    if(updateBook.modifiedCount && updateBookInBranch.modifiedCount ){
+        res.send("updated successfully")
+    }
+    else{
+        res.send("not updated")
+    }
+
 })
 
 app.delete("/deleteBookDetails/:bookId",async(req,res)=>{
-    const deletedData=await db.BranchModel.updateOne({ "books.$[].studentId":req.params.studentId },{
+    const getBookName=await db.BookModel.find({bookId:req.params.bookId},{bookName:1,branch:1,_id:0})
+    const branches=JSON.parse(JSON.stringify(getBookName[0]))
+    const {branchId}=branches.branch[0]
+
+    const deletedData=await db.BranchModel.updateOne({branchId:branchId},{
         $pull:{
-            students:{studentId:req.params.studentId}
+            books:{bookName:req.body.bookName}
         }
     })
     console.log(deletedData)
-    const updateStudent=await db.StudentModel.deleteOne({studentId:req.params.studentId})
-    console.log(updateStudent)
+
+    const deletedBook=await db.BookModel.deleteOne({bookId:req.params.bookId})
+    console.log(deletedBook)
+    if(deletedData.modifiedCount && deletedBook.deletedCount){
+        res.send("Deleted")
+    }else{
+        res.send("not deleted")
+    }
     
+})
+
+app.delete("/deleteSubject/:subjectId",async(req,res)=>{
+   try {
+    
+     // console.log(req.params.subjectId)
+     const getSubjectName=await db.SubjectModel.find({subjectId:req.params.subjectId},{_id:0})
+     const {subjectName,branch}=JSON.parse(JSON.stringify(getSubjectName[0]))
+     // console.log(subjectName)
+ 
+     let getBookName=await db.BookModel.find({subjectName:subjectName},{bookName:1,_id:0})
+     getBookName=getBookName[0].bookName
+     //deleting book with subject name
+     branch.forEach(async (ele)=>{
+         console.log(ele)
+         const deletedData=await db.BranchModel.updateOne({branchId:ele.branchId},{
+             $pull:{
+                 books:{bookName:getBookName}
+             }
+         })
+         console.log(deletedData)
+     })
+ 
+ 
+ 
+    //  deleting from branch's subjects
+     branch.forEach(async (ele)=>{
+         console.log(ele.branchId)
+         const deleteSubjectFromBranch=await db.BranchModel.updateOne({subjectName:subjectName},{$pull:{subjects:{subjectName:subjectName}}})
+         console.log(deleteSubjectFromBranch)
+ 
+     })
+ 
+    //  deleting from bookModel
+ 
+     const deleteFromBookModel=await db.BookModel.deleteOne({subjectName:subjectName})
+     console.log(deleteFromBookModel)
+ 
+    //  deleting from subjectModel
+     const deleteSubject=await db.SubjectModel.deleteOne({subjectId:req.params.subjectId})
+     console.log(deleteSubject)
+
+   } catch (error) {
+        console.log(error.message)
+   }
+
 })
 
 app.put("/updateBranchName/:branchName",async(req,res)=>{
@@ -161,6 +234,20 @@ app.put("/updateBranchName/:branchName",async(req,res)=>{
     console.log(error.message)
    }
 })
+//continue from here
+
+//to show available books ready from all branches
+
+app.get("/getAvailableBooks",async (req,res)=>{
+    var getAvailableBooks=await db.BranchModel.find({},{books:1,_id:0})
+    getAvailableBooks= JSON.parse(JSON.stringify(getAvailableBooks[0])).books
+    // getAvailableBooks=getAvailableBooks.books
+     getAvailableBooks=getAvailableBooks.filter((ele)=>ele.available===true)
+     getAvailableBooks.forEach(ele=>console.log(ele.bookName))
+})
+
+
+
 
 app.put("/updateStaff/:branchName/:field",async(req,res)=>{
     try {
@@ -224,6 +311,7 @@ app.put("/updateSubject/:branchName/:field",async(req,res)=>{
         console.log(error)
     }
 })
+
 app.put("/updateStudent/:branchName/:field",async(req,res)=>{
     try {
        
