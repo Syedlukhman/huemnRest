@@ -119,7 +119,6 @@ const book=new mongoose.Schema({
     }
 
 })
-
 const subject=new mongoose.Schema({
     subjectId:{
         type:String,
