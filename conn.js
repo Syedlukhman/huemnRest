@@ -50,7 +50,11 @@ const bookSchema=new mongoose.Schema({
     takenBy:{
         type:String,
         default:null
-    } //studentId
+    }, 
+    inLibrary:{
+            type:String,
+            required:true
+        }
 
 })
 const subjectSchema=new mongoose.Schema({
@@ -154,7 +158,7 @@ const staff=new mongoose.Schema({
 })
 
 const booksPickedCount= new mongoose.Schema({
-    subjectId:{
+    subjectName:{
         type:String,
         required:true
     },
@@ -165,7 +169,7 @@ const booksPickedCount= new mongoose.Schema({
     count:{
         type:Number,
         required:true,
-        default:0
+        
     }
 })
 

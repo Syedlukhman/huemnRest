@@ -262,22 +262,37 @@ app.get("/getAvailableBooks",async (req,res)=>{
  
 app.put('/assignBookToStudent/:bookId/:studentId/:branchId',async (req,res)=>{
      try {
-        const getBookName=await db.BookModel.find({bookId:req.params.bookId},{bookName:1,_id:0})
+        const getBookName=await db.BookModel.find({bookId:req.params.bookId},{bookName:1,subjectName:1,_id:0})
      const bookName=getBookName[0].bookName
+     const subjectName=getBookName[0].subjectName
+
      let assignBook=await db.BranchModel.find({"books.$[].bookName":getBookName[0].bookName},{books:1,_id:0})
     assignBook=JSON.parse(JSON.stringify(assignBook[0]))
     var {books}=assignBook
 
-    // books.map((ele)=>{
-    //     console.log(ele.bookName==getBookName[0].bookName)  
-    // })
-    // const book=
-   
+
+    
+    
     var foundBook=books.filter((ele)=>ele.bookName===bookName)
-    console.log(foundBook[0].takenBy==0)
-    if(foundBook[0].takenBy!==null){
-        res.send("Book not available")
-    }else{
+    // console.log(foundBook[0].takenBy==0)
+    const ifSubjectAlreadyExists=await db.BooksPickedCountModel.find({subjectName:subjectName})
+    console.log(typeof(foundBook[0].takenBy))
+    if(foundBook[0].takenBy==="null" || foundBook[0].takenBy===null  ){
+        if(ifSubjectAlreadyExists.length){
+            const updateCount=await db.BooksPickedCountModel.updateOne({subjectName:subjectName},
+                { $inc: { count: 1 }}
+            )
+                console.log(updateCount)
+        }
+        else{
+            const addNewDoc=new db.BooksPickedCountModel({
+                subjectName:subjectName,
+                branchId:req.params.branchId,
+                count:1
+            })
+            const saveDoc=await addNewDoc.save()
+            console.log(saveDoc)
+        }
         const updateTakenBy=await db.BranchModel.updateOne({branchId:req.params.branchId},
             {$set:{
                 "books.$[b].takenBy":req.params.studentId
@@ -285,6 +300,9 @@ app.put('/assignBookToStudent/:bookId/:studentId/:branchId',async (req,res)=>{
             ,{arrayFilters:[{"b.bookName":bookName}]})
         console.log(updateTakenBy)
         res.send("return it on time")
+    }else{
+        res.send("Book not available")
+        
     }
      } catch (error) {
         console.log(error)
@@ -546,6 +564,55 @@ app.get("/getStudentInOutTime",async (req,res)=>{
         console.log(error)
     }
 })
+
+app.get("/majorityUsage",async (req,res)=>{
+    try {
+        const getUsageData=await db.BooksPickedCountModel.find({},{subjectName:1,count:1,_id:0})
+        const mostReadSubject=getUsageData.reduce((a,b)=>{
+            if(a.count>b.count){
+                return a
+            }else{
+                return b
+            }
+        })
+        res.send(`${mostReadSubject.subjectName} is the most read book over so far.`)
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+app.get("/getStatsOfPeoplePresent",async(req,res)=>{
+    try {
+        const {startTime,endTime}=req.body
+        const getStudentStats=await db.StudentTimeLogs.find({inTime:{$gt:new Date(startTime)},outTime:{$lt:new Date(endTime)}})
+        const getStaffStats=await db.StaffTimeLogs.find({inTime:{$gt:new Date(startTime)},outTime:{$lt:new Date(endTime)}})
+        var students=[]
+        var staffs=[]
+        getStaffStats.forEach(async (ele)=>{
+            const name=await db.StaffModel.find({staffId:ele.staffId},{staffName:1})
+             staffs.push(name[0].staffName)
+            
+        })
+        getStudentStats.forEach(async (ele)=>{
+             const name=await db.StudentModel.find({studentId:ele.studentId},{studentName:1,})
+            students.push(name[0].studentName)
+        })
+        
+        setTimeout(()=>{
+            console.log(staffs)
+            res.send({"staffs":staffs,"students":students}
+            )
+        },2000)
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+app.get("/getBooksAvailableToReadInLibrary",async(req,res)=>{
+    const getBooks=await db.BranchModel.find({"books.inLbrary":"yes"})
+     console.log("hello")
+     console.log(getBooks)
+})
 //==============================================================================
 app.put("/updateStaff/:branchId/:staffId",async(req,res)=>{
     try {
@@ -741,6 +808,6 @@ app.put("/insertNewStaff/:branchName",async (req,res)=>{
     console.log(updateData)
 })
 
-app.listen(5501,()=>{
+app.listen(3000,()=>{
     console.log("listening on port 3000")
 })
