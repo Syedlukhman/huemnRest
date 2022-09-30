@@ -18,5 +18,14 @@
     "nodemon": "^2.0.20",
     "uuid": "^9.0.0"
   },
-  "description": ""
+  "description": "{\r \"branchName\":\"bellary\",\r \t\"companyName\":\"BYJU's\",",
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Syedlukhman/huemnRest.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Syedlukhman/huemnRest/issues"
+  },
+  "homepage": "https://github.com/Syedlukhman/huemnRest#readme"
 }

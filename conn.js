@@ -47,7 +47,10 @@ const bookSchema=new mongoose.Schema({
         default:true
     },
     
-    takenBy:String //studentId
+    takenBy:{
+        type:String,
+        default:null
+    } //studentId
 
 })
 const subjectSchema=new mongoose.Schema({
@@ -186,6 +189,44 @@ const company=new mongoose.Schema({
 
 })
 
+const studentTimeLogs=new mongoose.Schema({
+    studentId:{
+        type:String,
+        required:true
+    },
+    inTime:{
+        type:Date,
+        required:true
+    },
+    outTime:{
+        type:Date
+    },
+    branchId:{
+        type:String,
+        required:true
+    }
+})
+
+const staffTimeLogs=new mongoose.Schema({
+    staffId:{
+        type:String,
+        required:true
+    },
+    inTime:{
+        type:Date,
+        required:true
+    },
+    outTime:{
+        type:Date
+    },
+    branchId:{
+        type:String,
+        required:true
+    }
+})
+
+
+
 const BranchModel=new mongoose.model("branch",branchSchema)
 const StudentModel= mongoose.model("student",student)
 const BookModel= mongoose.model("book",book)
@@ -193,10 +234,13 @@ const StaffModel= mongoose.model("staff",staff)
 const SubjectModel= mongoose.model("subject",subject)
 const BooksPickedCountModel=mongoose.model("booksPickedCount",booksPickedCount)
 const CompanyModel=mongoose.model("company",company)
+const StudentTimeLogs=mongoose.model("studentTimeLogs",studentTimeLogs)
+const StaffTimeLogs=mongoose.model("staffTimeLogs",staffTimeLogs)
 
 
 
 
-module.exports={BranchModel,StudentModel,BookModel,StaffModel,SubjectModel,BooksPickedCountModel,CompanyModel}
+
+module.exports={BranchModel,StudentModel,BookModel,StaffModel,SubjectModel,BooksPickedCountModel,CompanyModel,StudentTimeLogs,StaffTimeLogs}
 
 

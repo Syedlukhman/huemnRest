@@ -27,6 +27,27 @@ function insertStaff(data){
         const addedNewStaff=await insertStudentDetails.save()
     })
 }
+async function insertSingleStaff(data){
+    try {
+        const insertStaffDetails=new db.StaffModel(data)
+        const addedNewStaff=await insertStaffDetails.save()
+    console.log(addedNewStaff)
+    } catch (error) {
+        console.log(error)
+    }
+    
+}
+
+async function insertSingleStudent(data){
+    try {
+        const insertStudentDetails=new db.StudentModel(data)
+        const addedNewStudent=await insertStudentDetails.save()
+    console.log(addedNewStudent)
+    } catch (error) {
+        console.log(error)
+    }
+    
+}
 
 function insertSubjects(data){
     const {branchId,subjects}=data
@@ -62,4 +83,4 @@ function insertBooks(data){
     })
 }
 
-module.exports={insertStudents,insertStaff,insertSubjects,insertBooks}
+module.exports={insertStudents,insertStaff,insertSubjects,insertBooks,insertSingleStaff,insertSingleStudent}
