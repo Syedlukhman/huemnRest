@@ -19,7 +19,6 @@
     "uuid": "^9.0.0"
   },
   "description": "{\r \"branchName\":\"bellary\",\r \t\"companyName\":\"BYJU's\",",
-  "devDependencies": {},
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Syedlukhman/huemnRest.git"

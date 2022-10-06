@@ -53,7 +53,7 @@ const bookSchema=new mongoose.Schema({
     }, 
     inLibrary:{
             type:String,
-            required:true
+            default:true
         }
 
 })
